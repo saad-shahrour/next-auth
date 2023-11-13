@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import UserForm from "../Components/UserForm";
 
 interface CreateUserProps {
     
@@ -7,9 +8,7 @@ interface CreateUserProps {
 const CreateUser: FunctionComponent<CreateUserProps> = () => {
     return ( 
         <div>
-            <h1>
-                Only Admins
-            </h1>
+            <UserForm/>
         </div>
      );
 }

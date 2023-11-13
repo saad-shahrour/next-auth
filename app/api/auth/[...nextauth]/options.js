@@ -1,5 +1,8 @@
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
+import CredentialsProvider from "next-auth/providers/credentials"
+import User from "@/app/models/User";
+import bcrypt from "bcrypt"
 
 export const options = {
     secret: process.env.NEXTAUTH_SECRET,
@@ -38,6 +41,44 @@ export const options = {
             },
             clientId: process.env.GOOGLE_ID,
             clientSecret: process.env.GOOGLE_SECRET
+        }),
+        CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+                email: {
+                    label: "email:",
+                    type: "text",
+                    placeholder: "youremail@gmail.com"
+                },
+                password: {
+                    label: "password:",
+                    type: "text",
+                    placeholder: "yourpassword"
+                }
+            },
+            async authorize(credentials) {
+                try {
+                    // lean() is to return the data in a plain JS object without MongoDB features (more efficient)
+                    // exec() is optional
+                    const foundUser = await User.findOne({email: credentials.email}).lean().exec()
+
+                    if (foundUser) {
+                        console.log("user exists");
+                        const match = await bcrypt.compare(credentials.password, foundUser.password)
+                        if (match) {
+                            console.log("good pass");
+                            delete foundUser.password
+
+                            foundUser.role = "unverified email"
+                            return foundUser
+                        }
+                    }
+
+                } catch (error) {
+                    console.log(error);
+                }
+                return null
+            }
         })
     ],
     callbacks: {
